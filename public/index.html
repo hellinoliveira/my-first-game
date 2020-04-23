@@ -12,6 +12,7 @@
             height: 400px;
         }
     </style>
+    <script src="/socket.io/socket.io.js"></script>
 </head>
 
 <body>
@@ -28,8 +29,15 @@
         const screen = document.getElementById('screen')
         renderScreen(screen, game)
 
-        game.addPlayer({ playerId: 'player1', playerX: 0, playerY: 0 })
-        game.addFruit({ fruitId: 'fruit1', fruitX: 1, fruitY: 1 })
+        const socket = io()
+
+        socket.on('connect', () => {
+            console.log(`connected on client with id ${socket.id}`)
+        })
+
+        socket.on('setup', (state) => {
+            game.state = state
+        })
     </script>
 </body>
 
