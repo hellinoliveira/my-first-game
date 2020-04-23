@@ -9,13 +9,33 @@ const sockets = socketio(server)
 
 const game = createGame();
 
-game.addPlayer({playerId: 'player1', playerX: 0, playerY: 0})
-console.log(game.state)
+game.subscribe((command) => {
+    console.log(`> Emitting ${command.type}`)
+    sockets.emit(command.type, command)
+})
+
+game.start();
 
 sockets.on('connection', (socket) => {
-    console.log(`> Player Connect with id:  ${socket.id}`)
+    const playerId = socket.id
+    console.log(`> Player connected: ${playerId}`)
+
+    game.addPlayer({ playerId: playerId })
 
     socket.emit('setup', game.state)
+
+    socket.on('disconnect', () => {
+        game.removePlayer({ playerId: playerId })
+        console.log(`> Player disconnected: ${playerId}`)
+    })
+
+    // since we dont have authentication we overwrite the type and playerId to keep it more safe
+    socket.on('move-player', (command) => {
+        command.playerId = playerId
+        command.type = 'move-player'
+        
+        game.movePlayer(command)
+    })
 })
 
 app.use(express.static('public'))
